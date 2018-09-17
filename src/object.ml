@@ -1,7 +1,7 @@
 open! Core
 open! Protocol_conv_msgpack
 
-type t = | Buffer of Buffer_t.t | Window of Window.t | Tabpage of Tabpage.t
+type t = | Buffer of Buffer0.t | Window of Window0.t | Tabpage of Tabpage0.t
 
 let ext_types = ref Int.Map.empty
 let (ext_types' : ([`Buffer | `Tabpage | `Window], int) Map.Poly.t ref) = ref Map.Poly.empty

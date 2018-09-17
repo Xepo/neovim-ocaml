@@ -1,5 +1,4 @@
-open Protocol_conv_msgpack
-type t = int [@@deriving protocol ~driver:(module Msgpack)]
+include Window0
 
 let of_msgpack (x:Msgpck.t) = 
   match Object.of_msgpack x with
