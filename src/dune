@@ -1,0 +1,10 @@
+(library
+   (name nvim)
+   (libraries core async ppx_protocol_conv ppx_protocol_conv_msgpack)
+    (preprocess (pps ppx_jane ppx_type_conv ppx_protocol_conv)))
+
+(rule (targets nvim_protocol.ml nvim_protocol.mli)
+  (deps nvim_protocol.msgpack (:gen ../generator/generator.exe))
+  (action (run %{gen} -nvim-api-info nvim_protocol.msgpack %{targets})))
+(rule (targets nvim_protocol.msgpack)
+  (action (with-stdout-to %{targets} (run nvim --api-info ))))

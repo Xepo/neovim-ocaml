@@ -1,0 +1,4 @@
+(alias
+  (name default)
+  (deps src/nvim_protocol.ml test/main.exe))
+
