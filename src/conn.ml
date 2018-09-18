@@ -33,8 +33,13 @@ let start_loop ?(verbose=false) t r =
 ;;
 
 
-let embed ?verbose ?working_dir ?(nvim_exe_path="nvim") ~handler () = 
-  Process.create ?working_dir ~prog:nvim_exe_path ~args:["--embed"; "--headless"] ()
+let embed ?verbose ?working_dir ?(nvim_exe_path="nvim") ~handler ~config () = 
+  let config_args = 
+    match config with
+    | `None -> ["-u"; "NONE"; "--noplugin"; "-n"]
+    | `Default -> []
+  in
+  Process.create ?working_dir ~prog:nvim_exe_path ~args:(["--embed"; "--headless"] @ config_args) ()
   >>| function 
   | Error e -> (Error e)
   | Ok p -> 
