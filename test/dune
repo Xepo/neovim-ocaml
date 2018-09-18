@@ -1,0 +1,5 @@
+(library
+   (name nvim_tests)
+   (inline_tests)
+   (libraries core async ppx_protocol_conv ppx_protocol_conv_msgpack nvim)
+   (preprocess (pps ppx_jane ppx_type_conv ppx_protocol_conv ppx_expect)))

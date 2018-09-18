@@ -14,12 +14,12 @@ end
 
 let next_message_id = ref 100
 
-let start_loop t r = 
+let start_loop ?(verbose=false) t r = 
   Reader.read_one_chunk_at_a_time r ~handle_chunk:(fun bigstr ~pos ~len -> 
       let s = Bigstring.to_string ~pos ~len bigstr in
       let (n, msgs) = Msgpck.String.read_all s in
       List.iter msgs ~f:(fun msg -> 
-          printf "%s\n\n" (Msgpck.show msg);
+          if verbose then Log.Global.info "Msgpack from nvim: %s\n\n" (Msgpck.show msg);
           let rpc = Rpc_message.of_msgpack_unit msg  in
           match Hashtbl.find t.waiting rpc.id with
           | None -> t.handler t rpc
@@ -33,13 +33,26 @@ let start_loop t r =
 ;;
 
 
-let connect_tcp ~handler host_and_port =
+let embed ?verbose ?working_dir ?(nvim_exe_path="nvim") ~handler () = 
+  Process.create ?working_dir ~prog:nvim_exe_path ~args:["--embed"; "--headless"] ()
+  >>| function 
+  | Error e -> (Error e)
+  | Ok p -> 
+    let waiting = Int.Table.create () in
+    let t = 
+      { writer = Process.stdin p; waiting; handler }
+    in
+    don't_wait_for (start_loop ?verbose t (Process.stdout p));
+    (Ok t)
+;;
+
+let connect_tcp ?verbose ~handler host_and_port =
   let%bind (_, r,writer) = Tcp.connect host_and_port in
   let waiting = Int.Table.create () in
   let t = 
     { writer; waiting; handler }
   in
-  don't_wait_for (start_loop t r);
+  don't_wait_for (start_loop ?verbose t r);
   return t
 ;;
 

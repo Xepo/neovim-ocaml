@@ -1,4 +1,4 @@
 (alias
   (name default)
-  (deps src/nvim_protocol.ml example/example.exe))
+  (deps src/nvim_protocol.ml (alias test/runtest) example/example.exe))
 
