@@ -20,4 +20,3 @@ TODO:
 - Is the Object representation correct?
 - Change Conn to support stdio, and unix pipes
 - Maybe move Async-dependent things to its own sublibrary so that Lwt implementation is easier?
-- Automate testing.  Gotta be some way of running nvim non-interactively. Otherwise, maybe tmuxish.
