@@ -1,5 +1,5 @@
 (executables
- (names main)
+ (names example)
   (libraries core async ppx_protocol_conv ppx_protocol_conv_msgpack nvim)
   (link_flags (-linkall))
   (preprocess (pps ppx_jane ppx_type_conv ppx_protocol_conv)))

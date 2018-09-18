@@ -21,7 +21,6 @@ let main ~where_to_connect =
   >>| Or_error.ok_exn
 ;;
 
-
 let () =
   let open Command.Let_syntax in
   Command.run
