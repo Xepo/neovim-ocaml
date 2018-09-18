@@ -180,7 +180,25 @@ module Protocol = struct
       parameters : (string * string) list;
       return_type : string;
       since : int;
+      deprecated_since : int option
     } [@@deriving protocol ~driver:(module Msgpack), sexp]
+
+
+
+    let default_deprecated_since = (Msgpck.of_string "deprecated_since", Msgpck.of_nil)
+
+    let of_msgpack msgpck =
+      try 
+        of_msgpack msgpck
+      with
+      | exn -> 
+        match msgpck with
+        | Msgpck.Map s -> 
+          let new_s = default_deprecated_since :: s in
+          of_msgpack (Msgpck.Map new_s)
+        | _ -> Exn.reraise exn "Not a map?"
+  ;;
+
 
     let which_module t = 
       if t.is_method 
@@ -188,16 +206,35 @@ module Protocol = struct
       else None
     ;;
 
+    let module_prefix = 
+      String.Map.of_alist_exn
+        [ "Window", "win_"
+        ; "Buffer", "buf_"
+        ; "Tabpage", "tabpage_"
+        ]
+
     let ocaml_name t = 
-      match which_module t with
-      | None -> t.name
-      | Some module_ -> 
-        match String.chop_prefix ~prefix:(String.lowercase module_ ^ "_") t.name with
-        | Some x -> x
-        | None -> t.name
+      let remove_prefix prefix s = 
+        String.chop_prefix ~prefix s
+        |> Option.value ~default:s 
+      in
+      let module_prefix =
+        match which_module t with
+        | None -> ""
+        | Some module_ -> 
+          Option.value ~default:"" (Map.find module_prefix module_)
+      in
+      let simplified = 
+        t.name
+        |> remove_prefix "nvim_"
+        |> remove_prefix module_prefix
+      in
+      match t.deprecated_since with
+      | None -> simplified
+      | Some x -> sprintf "_deprecated_v%d_%s" x simplified
     ;;
 
-    let to_mli ({is_method; name=_; parameters; return_type; since=_;} as t) =
+    let to_mli ({is_method; name=_; parameters; return_type; since=_; deprecated_since=_} as t) =
       let arrow_after_conn = match parameters with | [] -> "" | _ -> " -> " in
       sprintf !"val %{ocaml_name} : conn:Conn.t%s%s -> %{Datatype.to_mli} Conn.result" t arrow_after_conn (Parameters.to_mli ~is_method parameters) return_type
     ;;
@@ -281,6 +318,12 @@ module Protocol = struct
     in
     method_ml ^ func_list_to_ml global_funcs ^ (Types.to_ml t.types)
   ;;
+
+  let prepare t =
+    { t with functions = 
+    List.sort t.functions ~compare:(fun x y -> String.compare (Func.ocaml_name x) (Func.ocaml_name y))
+    }
+  ;;
 end
 
 let conn_sig = 
@@ -306,7 +349,7 @@ let main ~ml_target ~mli_target ~source =
   printf !"%s\n\n________________\n" (Msgpck.show t);
   Writer.flushed (force Writer.stdout)
   >>= fun () ->
-  let protocol = Protocol.of_msgpack t in
+  let protocol = Protocol.of_msgpack t |> Protocol.prepare in
   Deferred.all_unit
     [
       Writer.save ml_target ~contents:(preamble ^ Protocol.to_ml protocol);

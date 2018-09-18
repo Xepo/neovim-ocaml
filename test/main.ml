@@ -19,7 +19,6 @@ let main ~where_to_connect =
       >>= fun () -> 
   Nvim.Nvim_protocol.nvim_set_current_line ~conn ~line:"neato"
   >>| Or_error.ok_exn
-
 ;;
 
 
