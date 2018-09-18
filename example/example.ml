@@ -7,17 +7,17 @@ let main ~where_to_connect =
   let%bind conn = 
     Nvim.Conn.connect_tcp ~handler:(fun _ _ -> failwith "not implemented handler") where_to_connect
   in
-  Nvim.Nvim_protocol.command ~conn ~command:"echo 'Hi!'"
+  Nvim.command ~conn ~command:"echo 'Hi!'"
   >>| Or_error.ok_exn
   >>= fun () -> 
   let%bind buffer = 
-    Nvim.Nvim_protocol.get_current_buf ~conn 
+    Nvim.get_current_buf ~conn 
     >>| Or_error.ok_exn
   in
-  Nvim.Nvim_protocol.Buffer.set_lines ~conn buffer ~strict_indexing:true ~start:0 ~end_:0 ~replacement:["Whoa"]
+  Nvim.Buffer.set_lines ~conn buffer ~strict_indexing:true ~start:0 ~end_:0 ~replacement:["Whoa"]
   >>| Or_error.ok_exn
       >>= fun () -> 
-  Nvim.Nvim_protocol.set_current_line ~conn ~line:"neato"
+  Nvim.set_current_line ~conn ~line:"neato"
   >>| Or_error.ok_exn
 ;;
 

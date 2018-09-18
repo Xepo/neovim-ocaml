@@ -295,7 +295,7 @@ module Protocol = struct
     let method_mli = 
       Map.to_alist methods
       |> List.map ~f:(fun (md, funcs) -> 
-          sprintf "module %s : sig\ntype t = %s.t\n%s\nend\n\n" md md (indent (func_list_to_mli funcs)))
+          sprintf "module %s : sig\ninclude (module type of %s)\n%s\nend\n\n" md md (indent (func_list_to_mli funcs)))
       |> String.concat ~sep:""
     in
     method_mli ^ func_list_to_mli global_funcs ^ (Types.to_mli t.types)
